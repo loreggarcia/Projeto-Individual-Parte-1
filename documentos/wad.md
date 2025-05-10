@@ -1,10 +1,8 @@
 # Web Application Document - Projeto Individual - Módulo 2 - Inteli
 
-<img src="/documentos/assets/adalove2.png" height=100 width=100 />
-
 ## AdaLove Reimaginated
 
-#### Davi Duarte
+#### Lorena Gabriela da Silva Garcia
 
 ## Sumário
 
