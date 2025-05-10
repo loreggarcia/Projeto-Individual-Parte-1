@@ -34,13 +34,13 @@ A aplicação permite funcionalidades tais quais como criar, editar e deletar ta
 
 ## <a name="c3"></a>3. Projeto da Aplicação Web
 
-A arquitetura do sistema AdaLove Reimaginated segue o padrão MVC (Model-View-Controller), permitindo uma separação clara de responsabilidades e facilitando a manutenção e escalabilidade da aplicação.
+A arquitetura do sistema MyPlanner segue o padrão MVC (Model-View-Controller), permitindo uma separação clara de responsabilidades e facilitando a manutenção e escalabilidade da aplicação.
 
 ### 3.1. Modelagem do banco de dados
 
 A modelagem do banco de dados é o processo de criar uma representação estruturada das informações que serão armazenadas em um sistema de banco de dados. Este processo envolve a identificação das entidades principais, seus atributos e os relacionamentos entre elas, resultando em um esquema que serve como plano para a implementação física do banco de dados.
 
-O modelo relacional do banco de dados da aplicação AdaLove Reimaginated foi projetado para permitir um gerenciamento eficiente das atividades de aprendizado e suas relações com usuários, instrutores e áreas de conhecimento. A estrutura do banco foi implementada usando PostgreSQL e segue os princípios de normalização para evitar redundâncias e garantir a integridade dos dados.
+O modelo relacional do banco de dados da aplicação MyPlanner foi projetado para permitir um gerenciamento eficiente das tarefas diárias e suas relações com usuários. A estrutura do banco foi implementada usando PostgreSQL e segue os princípios de normalização para evitar redundâncias e garantir a integridade dos dados.
 
 O diagrama abaixo apresenta a estrutura completa do banco de dados com todas as tabelas e seus relacionamentos:
 
