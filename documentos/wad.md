@@ -1,6 +1,6 @@
 # Web Application Document - Projeto Individual - Módulo 2 - Inteli
 
-## AdaLove Reimaginated
+## MyPlanner
 
 #### Lorena Gabriela da Silva Garcia
 
