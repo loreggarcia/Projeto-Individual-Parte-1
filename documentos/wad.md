@@ -72,19 +72,56 @@ O diagrama abaixo apresenta a estrutura completa do banco de dados com todas as 
 - Cada tarefa está associada a um único usuário;
 - As categorias podem ser usadas por vários usuários, mas cada tarefa só pertence a uma categoria por vez
 
-### 3.1.1 BD e Models (Semana 5)
-*Descreva aqui os Models implementados no sistema web*
+### 3.1.1 BD e Models 
+A camada de Models em uma aplicação baseada na arquitetura MVC (Model-View-Controller) é responsável por lidar com a lógica de acesso a dados, abstraindo a interação direta com o banco de dados. No sistema de Gerenciamento de Tarefas, os Models servem como ponte entre os controladores e o banco de dados PostgreSQL, permitindo a manipulação segura, reutilizável e estruturada das informações.
+
+Os Models garantem o encapsulamento das regras de negócio e facilitam a manutenção do sistema, isolando mudanças na base de dados e promovendo uma interface de acesso consistente para as demais camadas da aplicação.
+
+### Models Implementados
+#### Categoria Model: 
+Responsável por todas as operações relacionadas à tabela `categorias`, permitindo a classificação de tarefas em diferentes tipos ou temas.
+
+**Funcionalidades:**
+- **CRUD completo:** métodos para criação, leitura, atualização e exclusão de categorias.
+- **Organização das tarefas:** cada categoria pode ser associada a múltiplas tarefas, funcionando como uma tag organizacional.
+- **Isolamento de lógica:** encapsula a manipulação da tabela `categorias`, promovendo independência entre banco e controle.
+
+#### Task Model
+Gerencia a tabela `tasks`, onde ficam armazenadas as informações das tarefas criadas pelos usuários.
+
+**Funcionalidades:**
+- **CRUD completo:** permite criar, consultar, atualizar e excluir tarefas.
+- **Relacionamentos:** integra-se com os Models de `usuarios` e `categorias` por meio dos campos `id_usuario` e `id_categoria`.
+- **Atributos ricos:** cada tarefa contém informações detalhadas como prioridade, status de conclusão, data de criação, prazo e evento associado.
+#### Usuario Model
+Responsável por lidar com os dados da tabela `usuarios`, englobando funcionalidades essenciais para o gerenciamento de perfis na aplicação.
+
+**Funcionalidades:**
+- **Operações CRUD:** cadastro, consulta, atualização e exclusão de usuários.
+- **Campos sensíveis:** manipula atributos como `nome`, `email` e `senha`, que são fundamentais para autenticação e personalização.
+- **Vínculo com tarefas:** cada usuário pode ser associado a diversas tarefas via chave estrangeira.
+
 
 ### 3.2. Arquitetura (Semana 5)
 
-*Posicione aqui o diagrama de arquitetura da sua solução de aplicação web. Atualize sempre que necessário.*
+A arquitetura de software é o projeto de um sistema de software, que define normas, técnicas e o modo de interação entre os componentes do software. Ela estabelece a base para o desenvolvimento, a evolução e a manutenção do software. As arquiteturas possuem diversos padrões, que devem ser escolhidos de acordo com o modelo de negócio e os requisitos. Ou seja, a arquitetura de um software é a organização de um sistema, sendo responsável por definir tudo o que será utilizado dentro do projeto  
+    
+No caso do projeto MyPlanner, o padrão MVC (Model-View-Controller) foi escolhido para o projeto devido à sua flexibilidade, escalabilidade e reusabilidade. A arquitetura MVC é composta pelo _Model_, que estabelece a regra de negócio e as interações com os dados, o _View_, que define a apresentação da interface e dos dados para o usuário, e o _Controller_, responsável por conectar a _View_ ao _Model_. 
 
-**Instruções para criação do diagrama de arquitetura**  
-- **Model**: A camada que lida com a lógica de negócios e interage com o banco de dados.
-- **View**: A camada responsável pela interface de usuário.
-- **Controller**: A camada que recebe as requisições, processa as ações e atualiza o modelo e a visualização.
-  
-*Adicione as setas e explicações sobre como os dados fluem entre o Model, Controller e View.*
+Abaixo está o o digrama de arquitetura desse projeto:
+
+![!\[\[image.png\]\]](assets/image.png)
+
+### 3.2.1.Fluxo da Arquitetura
+
+1. **Cliente (Usuário e Navegador)**: O usuário interage com a aplicação por meio de uma interface no navegador. Essa interface envia requisições HTTP, como por exemplo o envio de formulários ou requisições de visualização de dados.
+2. **View (frontRoutes.js)**: O arquivo `frontRoutes.js` é o ponto de entrada das requisições do navegador. Ele atua como intermediário, redirecionando o usuário para as rotas apropriadas de cada funcionalidade: tarefas, usuários ou categorias.
+3. **Routes (CategoriaRoutes.js, TasksRoutes.js, UsuarioRoutes.js)**: Esses arquivos de rotas recebem as requisições vindas do `frontRoutes.js` e as encaminham para os respectivos controladores. Cada rota é responsável por mapear os endpoints da aplicação, como `GET /tarefas`, `POST /usuarios`, etc.
+4. **Controllers (CategoriaController.js, TasksController.js, UsuarioController.js)**: Os controladores processam as requisições recebidas. Eles aplicam regras de negócio, fazem validações e interagem com os modelos. Por exemplo, o `TasksController.js` pode receber uma nova tarefa, validá-la e salvar no banco de dados por meio do `TasksModel.js`.
+5. **Models (CategoriaModel.js, TasksModel.js, UsuarioModel.js)**: Os modelos representam a camada de dados da aplicação. Cada modelo é responsável por interagir com o banco de dados PostgreSQL, realizando operações como criação, leitura, atualização e exclusão (CRUD). Eles definem a estrutura das tabelas e encapsulam as consultas SQL.
+6. **Banco de Dados (PostgreSQL)**: Todos os dados persistentes da aplicação são armazenados em um banco de dados PostgreSQL. Os modelos fazem consultas diretamente a esse banco, e os resultados são retornados aos controladores, que por sua vez os enviam para as rotas, até que cheguem de volta ao cliente como resposta da requisição.
+
+
 
 ### 3.3. Wireframes (Semana 03 - opcional)
 
@@ -99,9 +136,63 @@ O diagrama abaixo apresenta a estrutura completa do banco de dados com todas as 
 
 *Posicione aqui algumas imagens demonstrativas de seu protótipo de alta fidelidade e o link para acesso ao protótipo completo (mantenha o link sempre público para visualização).*
 
-### 3.6. WebAPI e endpoints (Semana 05)
+### 3.6. WebAPI e Endpoints
 
-*Utilize um link para outra página de documentação contendo a descrição completa de cada endpoint. Ou descreva aqui cada endpoint criado para seu sistema.*  
+A Web API do sistema segue o modelo RESTful, permitindo a comunicação entre o frontend e o backend por meio de rotas HTTP organizadas em controladores (Controllers). Cada rota executa uma operação específica (GET, POST, PUT, DELETE), possibilitando funcionalidades como criação de usuários, listagem de tarefas, upload de arquivos, entre outras.
+
+#### Tipos de Requisições HTTP Utilizadas
+
+- **GET** – Recupera dados do servidor.
+- **POST** – Envia dados para criar um novo recurso.
+- **PUT** – Atualiza um recurso existente.
+- **DELETE** – Remove um recurso.
+
+#### Endpoints por Funcionalidade
+
+##### Usuários
+
+| Método | Rota                | Função                                   |
+|--------|---------------------|------------------------------------------|
+| GET    | /users              | Lista todos os usuários                  |
+| GET    | /users/:id          | Retorna dados de um usuário específico   |
+| POST   | /users              | Cria um novo usuário                     |
+| PUT    | /users/:id          | Atualiza dados de um usuário             |
+| DELETE | /users/:id          | Deleta um usuário                        |
+
+##### Linhas de Montagem
+
+| Método | Rota                   | Função                                      |
+|--------|------------------------|---------------------------------------------|
+| GET    | /assembleLines         | Lista todas as linhas de montagem           |
+| POST   | /assembleLines         | Cria uma nova linha                         |
+| DELETE | /assembleLines/:id     | Remove uma linha de montagem específica     |
+
+##### Manuais
+
+| Método | Rota                  | Função                                      |
+|--------|-----------------------|---------------------------------------------|
+| GET    | /handbooks            | Lista todos os manuais                      |
+| GET    | /handbooks/:id        | Exibe detalhes de um manual específico      |
+| POST   | /handbooks            | Cria um novo manual                         |
+| PUT    | /handbooks/:id        | Atualiza um manual                          |
+| DELETE | /handbooks/:id        | Remove um manual                            |
+
+##### Tarefas
+
+| Método | Rota               | Função                                     |
+|--------|--------------------|--------------------------------------------|
+| GET    | /tasks             | Lista todas as tarefas                     |
+| GET    | /tasks/:id         | Exibe detalhes de uma tarefa específica    |
+| POST   | /tasks             | Cria uma nova tarefa                       |
+| PUT    | /tasks/:id         | Marca uma tarefa como concluída           |
+
+##### Favoritos
+
+| Método | Rota               | Função                                     |
+|--------|--------------------|--------------------------------------------|
+| GET    | /favorites         | Lista itens favoritados                    |
+| POST   | /favorites         | Adiciona um novo favorito                  |
+ 
 
 ### 3.7 Interface e Navegação (Semana 07)
 
