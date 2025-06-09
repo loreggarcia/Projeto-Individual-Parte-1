@@ -300,8 +300,10 @@
         }
 
         async function deleteTask(id) {
+            // Corrigir para usar id_task se existir
+            const taskId = typeof id === 'object' && id.id_task ? id.id_task : id;
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
+                const response = await fetch(`${API_URL}/${taskId}`, {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json'

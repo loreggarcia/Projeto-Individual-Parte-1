@@ -43,7 +43,7 @@ const listarTasks = async (req, res) => {
 
 // Editar task
 const editarTasks = async (req, res) => {
-  const { id_task } = req.params;
+  const { id } = req.params; // Corrigido para buscar 'id' da rota
   const {
     titulo,
     descricao,
@@ -59,7 +59,7 @@ const editarTasks = async (req, res) => {
     WHERE id_task = $7
     RETURNING *
   `;
-  const values = [titulo, descricao, id_categoria, prioridade, data_evento, concluida, id_task];
+  const values = [titulo, descricao, id_categoria, prioridade, data_evento, concluida, id]; // Usando 'id'
 
   try {
     const result = await pool.query(query, values);
@@ -75,10 +75,10 @@ const editarTasks = async (req, res) => {
 
 // Excluir task
 const excluirTasks = async (req, res) => {
-  const { id_task } = req.params;
+  const { id } = req.params; // Corrigido para buscar 'id' da rota
 
   const query = 'DELETE FROM tasks WHERE id_task = $1 RETURNING *';
-  const values = [id_task];
+  const values = [id]; // Usando 'id'
 
   try {
     const result = await pool.query(query, values);
