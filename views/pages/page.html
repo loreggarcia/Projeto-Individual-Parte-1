@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPlanner</title>
+    <link rel="stylesheet" href="../css/page.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MyPlanner</h1>
+            <p>Seu gerenciador de tarefas inteligente</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Seção de Controles -->
+            <div class="controls-section">
+                <!-- Formulário de Tarefas -->
+                <div class="task-form">
+                    <h3 id="form-title">Nova Tarefa</h3>
+                    <form id="task-form">
+                        <div class="form-group">
+                            <label for="task-title">Título da Tarefa</label>
+                            <input type="text" id="task-title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-description">Descrição</label>
+                            <textarea id="task-description" placeholder="Descreva sua tarefa..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-category">Categoria</label>
+                            <select id="task-category" required>
+                                <option value="">Selecione uma categoria</option>
+                                <option value="trabalho">Trabalho</option>
+                                <option value="pessoal">Pessoal</option>
+                                <option value="estudos">Estudos</option>
+                                <option value="saude">Saúde</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-priority">Prioridade</label>
+                            <select id="task-priority" required>
+                                <option value="">Selecione a prioridade</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Média</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-date">Data de Vencimento</label>
+                            <input type="date" id="task-date">
+                        </div>
+                        
+                        <button type="submit" class="btn" id="submit-btn">Criar Tarefa</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancelar</button>
+                    </form>
+                </div>
+
+                <!-- Filtros -->
+                <div class="filters-section">
+                    <h3>Filtros</h3>
+                    <div class="filter-row">
+                        <div class="form-group">
+                            <label for="filter-status">Status</label>
+                            <select id="filter-status">
+                                <option value="">Todos</option>
+                                <option value="pendente">Pendentes</option>
+                                <option value="concluida">Concluídas</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filter-category">Categoria</label>
+                            <select id="filter-category">
+                                <option value="">Todas</option>
+                                <option value="trabalho">Trabalho</option>
+                                <option value="pessoal">Pessoal</option>
+                                <option value="estudos">Estudos</option>
+                                <option value="saude">Saúde</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="filter-priority">Prioridade</label>
+                            <select id="filter-priority">
+                                <option value="">Todas</option>
+                                <option value="alta">Alta</option>
+                                <option value="media">Média</option>
+                                <option value="baixa">Baixa</option>
+                            </select>
+                        </div>
+                        
+                        <button type="button" class="btn btn-secondary" onclick="clearFilters()">Limpar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Tarefas -->
+            <div class="tasks-section">
+                <div class="tasks-header">
+                    <h3>Minhas Tarefas</h3>
+                    <div class="task-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="total-tasks">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="pending-tasks">0</div>
+                            <div class="stat-label">Pendentes</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="completed-tasks">0</div>
+                            <div class="stat-label">Concluídas</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tasks-grid" id="tasks-container">
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">📝</div>
+                        <h3>Nenhuma tarefa encontrada</h3>
+                        <p>Crie sua primeira tarefa para começar a organizar seu dia!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.</p>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                <button class="btn btn-danger" id="confirm-delete">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado da aplicação
+        let tasks = [];
+        let editingTaskId = null;
+        let taskIdCounter = 1;
+
+        // Elementos do DOM
+        const taskForm = document.getElementById('task-form');
+        const tasksContainer = document.getElementById('tasks-container');
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const confirmModal = document.getElementById('confirm-modal');
+
+        // URL base da API
+        const API_URL = 'http://localhost:3000/api/tasks';
+
+        // Event Listeners
+        taskForm.addEventListener('submit', handleSubmit);
+        document.getElementById('filter-status').addEventListener('change', applyFilters);
+        document.getElementById('filter-category').addEventListener('change', applyFilters);
+        document.getElementById('filter-priority').addEventListener('change', applyFilters);
+        document.getElementById('cancel-btn').addEventListener('click', cancelEdit);
+        document.querySelector('.close').addEventListener('click', closeModal);
+        
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                closeModal();
+            }
+        });
+
+        // Funções principais
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const taskData = {
+                title: document.getElementById('task-title').value,
+                description: document.getElementById('task-description').value,
+                category: document.getElementById('task-category').value,
+                priority: document.getElementById('task-priority').value,
+                date: document.getElementById('task-date').value,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+
+            if (editingTaskId) {
+                await updateTask(editingTaskId, taskData);
+            } else {
+                await createTask(taskData);
+            }
+
+            resetForm();
+            await loadTasks();
+            updateStats();
+        }
+
+        async function createTask(taskData) {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(taskData)
+                });
+            } catch (err) {
+                alert('Erro ao criar tarefa!');
+            }
+        }
+
+        async function updateTask(id, taskData) {
+            try {
+                await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(taskData)
+                });
+            } catch (err) {
+                alert('Erro ao atualizar tarefa!');
+            }
+        }
+
+        async function deleteTask(id) {
+            try {
+                await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                await loadTasks();
+                updateStats();
+            } catch (err) {
+                alert('Erro ao excluir tarefa!');
+            }
+        }
+
+        async function toggleTaskComplete(id) {
+            const task = tasks.find(task => task.id === id);
+            if (task) {
+                try {
+                    await fetch(`${API_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...task, completed: !task.completed })
+                    });
+                    await loadTasks();
+                    updateStats();
+                } catch (err) {
+                    alert('Erro ao atualizar status da tarefa!');
+                }
+            }
+        }
+
+        function editTask(id) {
+            const task = tasks.find(task => task.id === id);
+            if (task) {
+                editingTaskId = id;
+                
+                document.getElementById('task-title').value = task.title;
+                document.getElementById('task-description').value = task.description;
+                document.getElementById('task-category').value = task.category;
+                document.getElementById('task-priority').value = task.priority;
+                document.getElementById('task-date').value = task.date;
+                
+                formTitle.textContent = 'Editar Tarefa';
+                submitBtn.textContent = 'Atualizar Tarefa';
+                cancelBtn.style.display = 'inline-block';
+                
+                // Scroll para o formulário
+                document.querySelector('.task-form').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function cancelEdit() {
+            editingTaskId = null;
+            resetForm();
+        }
+
+        function resetForm() {
+            taskForm.reset();
+            formTitle.textContent = 'Nova Tarefa';
+            submitBtn.textContent = 'Criar Tarefa';
+            cancelBtn.style.display = 'none';
+            editingTaskId = null;
+        }
+
+        async function loadTasks() {
+            try {
+                const res = await fetch(API_URL);
+                tasks = await res.json();
+                renderTasks();
+                updateStats();
+            } catch (err) {
+                tasks = [];
+                renderTasks();
+                updateStats();
+            }
+        }
+
+        function renderTasks() {
+            const filteredTasks = getFilteredTasks();
+            
+            if (filteredTasks.length === 0) {
+                tasksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">📝</div>
+                        <h3>Nenhuma tarefa encontrada</h3>
+                        <p>Crie sua primeira tarefa para começar a organizar seu dia!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tasksContainer.innerHTML = filteredTasks.map(task => `
+                <div class="task-item ${task.completed ? 'completed' : ''} priority-${task.priority}">
+                    <div class="checkbox-container">
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                               onchange="toggleTaskComplete(${task.id})">
+                        <span class="task-category category-${task.category}">${task.category}</span>
+                    </div>
+                    
+                    <div class="task-header">
+                        <div>
+                            <div class="task-title">${task.title}</div>
+                            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="task-meta">
+                        <div class="task-date">
+                            📅 ${task.date ? formatDate(task.date) : 'Sem data'}
+                        </div>
+                        <div class="task-actions">
+                            <button class="btn btn-secondary btn-small" onclick="editTask(${task.id})">
+                                Editar
+                            </button>
+                            <button class="btn btn-danger btn-small" onclick="confirmDelete(${task.id})">
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getFilteredTasks() {
+            const statusFilter = document.getElementById('filter-status').value;
+            const categoryFilter = document.getElementById('filter-category').value;
+            const priorityFilter = document.getElementById('filter-priority').value;
+
+            return tasks.filter(task => {
+                const statusMatch = !statusFilter || 
+                    (statusFilter === 'concluida' && task.completed) ||
+                    (statusFilter === 'pendente' && !task.completed);
+                
+                const categoryMatch = !categoryFilter || task.category === categoryFilter;
+                const priorityMatch = !priorityFilter || task.priority === priorityFilter;
+
+                return statusMatch && categoryMatch && priorityMatch;
+            });
+        }
+
+        function applyFilters() {
+            renderTasks();
+        }
+
+        function clearFilters() {
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-category').value = '';
+            document.getElementById('filter-priority').value = '';
+            renderTasks();
+        }
+
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const pendingTasks = totalTasks - completedTasks;
+
+            document.getElementById('total-tasks').textContent = totalTasks;
+            document.getElementById('completed-tasks').textContent = completedTasks;
+            document.getElementById('pending-tasks').textContent = pendingTasks;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR');
+        }
+
+        function confirmDelete(id) {
+            confirmModal.style.display = 'block';
+            document.getElementById('confirm-delete').onclick = () => {
+                deleteTask(id);
+                closeModal();
+            };
+        }
+
+        function closeModal() {
+            confirmModal.style.display = 'none';
+        }
+
+        // Inicializar aplicação
+        function init() {
+            loadTasks();
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

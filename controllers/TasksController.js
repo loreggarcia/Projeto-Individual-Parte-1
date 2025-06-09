@@ -1,50 +1,50 @@
-// controllers/tasksController.js
 const pool = require('../config/db'); // Importa a configuração do banco de dados
 
 // Criar uma task
-exports.criarTasks = async (req, res) => {
+const criarTasks = async (req, res) => {
   const {
-    titulo,
-    data_evento,
-    prioridade,
-    data_criacao,
-    data_termino,
-    concluida,
-    id_usuario,
-    id_categoria} = req.body;
+    title,
+    description,
+    category,
+    priority,
+    date,
+    completed,
+    createdAt
+  } = req.body;
 
-  const query = 'INSERT INTO usuarios (titulo, data_evento, prioridade, data_criacao, data_termino, concluida, id_usuario, id_categoria) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
-  const values = [titulo, data_evento, prioridade, data_criacao, data_termino, concluida, id_usuario, id_categoria];
+  const query = 'INSERT INTO tasks (title, description, category, priority, date, completed, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+  const values = [title, description, category, priority, date, completed, createdAt];
 
   try {
     const result = await pool.query(query, values);
-    const tasks = result.rows[0];
-    res.status(201).json(tasks);
+    const task = result.rows[0];
+    res.status(201).json(task);
   } catch (err) {
+    console.error('Erro ao criar task:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // Listar todas as tasks
-exports.listarTasks = async (req, res) => {
-  const query = 'SELECT * FROM tasks';
+const listarTasks = async (req, res) => {
+  const query = 'SELECT * FROM tasks ORDER BY created_at DESC';
 
   try {
     const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (err) {
+    console.error('Erro ao listar tasks:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // Editar tasks
-exports.editarTasks = async (req, res) => {
+const editarTasks = async (req, res) => {
   const { id } = req.params;
-  const { titulo, data_evento, prioridade, data_criacao, data_termino, concluida, id_usuario, id_categoria } = req.body;
+  const { title, description, category, priority, date, completed } = req.body;
 
-  const query = `UPDATE tasks SET titulo = $1, data_evento = $2, prioridade = $3 , data_criacao = $4, data_termino = $5, concluida = $6, id_usuario = $7, id_categoria = $8, updated_at = CURRENT_TIMESTAMP
-    WHERE id = $9 RETURNING *`;
-  const values = [titulo, data_evento, prioridade, data_criacao, data_termino, concluida, id_usuario, id_categoria, id];
+  const query = `UPDATE tasks SET title = $1, description = $2, category = $3, priority = $4, date = $5, completed = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *`;
+  const values = [title, description, category, priority, date, completed, id];
 
   try {
     const result = await pool.query(query, values);
@@ -53,12 +53,13 @@ exports.editarTasks = async (req, res) => {
     }
     res.status(200).json(result.rows[0]);
   } catch (err) {
+    console.error('Erro ao editar task:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // Excluir uma tarefa
-exports.excluirTasks = async (req, res) => {
+const excluirTasks = async (req, res) => {
   const { id } = req.params;
 
   const query = 'DELETE FROM tasks WHERE id = $1 RETURNING *';
@@ -71,13 +72,15 @@ exports.excluirTasks = async (req, res) => {
     }
     res.status(200).json({ message: 'Task excluída com sucesso' });
   } catch (err) {
+    console.error('Erro ao excluir task:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
+// Exportação
 module.exports = {
   criarTasks,
-  listarTasks, 
-  editarTasks, 
+  listarTasks,
+  editarTasks,
   excluirTasks
 };

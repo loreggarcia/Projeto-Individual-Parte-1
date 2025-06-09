@@ -1,14 +1,13 @@
 // routes/UsuarioRoutes.js
 const express = require('express');
 const router = express.Router();
-const CategoriaModels = require('../models/CategoriaModels');
-const CategoriaController = require('../controllers/CategoriaController');
+const CategoriaController = require('../controllers/CategoriaController.js');
 
 // Rotas para o CRUD de categorias
-router.post('/categorias', CategoriaController.criarCategoria); 
-router.get('/categorias', CategoriaController.listarCategoria);
-router.put('/categorias/:id', CategoriaController.editarCategoria);
-router.delete('/categorias/:id', CategoriaController.excluirCategoria);
+router.post('/', CategoriaController.criarCategoria); 
+router.get('/', CategoriaController.listarCategoria);
+router.put('/:id', CategoriaController.editarCategoria);
+router.delete('/:id', CategoriaController.excluirCategoria);
 
 module.exports = router;
 
