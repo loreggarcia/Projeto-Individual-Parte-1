@@ -196,9 +196,226 @@ A Web API do sistema segue o modelo RESTful, permitindo a comunicação entre o 
 
 ### 3.7 Interface e Navegação (Semana 07)
 
-*Descreva e ilustre aqui o desenvolvimento do frontend do sistema web, explicando brevemente o que foi entregue em termos de código e sistema. Utilize prints de tela para ilustrar.*
+O frontend do sistema de gerenciamento de tarefas foi desenvolvido utilizando HTML5, CSS3 e JavaScript puro, respeitando a arquitetura MVC e consumindo dados dinamicamente via API RESTful integrada ao backend com PostgreSQL. A interface prioriza **clareza, responsividade e produtividade**, com um fluxo simples de interação entre usuário e sistema.
 
----
+## 3.7.1 Área Principal
+
+<div align="center" width="100%">
+  <sub></sub>
+    <img src="../documentos/assets/Captura de tela 2025-06-09 021543.png"/>
+  <sup></sup>
+</div>
+
+**Funcionalidade**: Interface central que exibe as tarefas organizadas por categoria, com filtros, botões de ação e contadores de status.
+
+**Features Principais**:
+
+- Exibição dinâmica de tarefas filtradas por status e categoria;
+    
+- Botão de criação de nova tarefa;
+    
+- Contadores de tarefas "pendentes", "em andamento" e "concluídas";
+    
+- Estrutura de layout com colunas distintas;
+    
+- Feedback visual com cores por status;
+    
+- Organização automática das tarefas conforme o filtro ativo.
+    
+
+**Benefícios para o Usuário**:
+
+- Visualização rápida do que precisa ser feito;
+    
+- Separação clara entre tipos de tarefa;
+    
+- Facilidade para criação e gerenciamento direto das atividades;
+    
+- Experiência limpa e sem distrações.
+    
+
+**Detalhes Técnicos**:
+
+- HTML e CSS escritos de forma modular (dividido por áreas);
+    
+- Renderização das tarefas via JavaScript, utilizando `fetch` em endpoints `/tasks` com filtros;
+    
+- Manipulação de DOM para criar dinamicamente os cards de tarefa;
+    
+- Elementos com classes CSS reutilizáveis e responsivos.
+
+## 3.7.2 Modal de Criação de Tarefa
+<div align="center" width="100%">
+  <sub></sub>
+    <img src="../documentos/assets/Captura de tela 2025-06-09 021443.png"/>
+  <sup></sup>
+</div>
+
+**Funcionalidade**: Modal flutuante que permite a criação de uma nova tarefa com título, descrição, prioridade, status e categoria.
+
+**Features Principais**:
+
+- Campos de entrada com validação (título obrigatório);
+    
+- Dropdowns para seleção de status, prioridade e categoria;
+    
+- Botões para "Criar Tarefa" e "Cancelar";
+    
+- Estilo limpo e responsivo com feedback visual;
+    
+- Pré-carregamento de categorias via API.
+    
+
+**Benefícios para o Usuário**:
+
+- Criação rápida e orientada;
+    
+- Prevenção de erros com validações visuais;
+    
+- Interface familiar e prática.
+    
+
+**Detalhes Técnicos**:
+
+- Modal criado dinamicamente com JavaScript;
+    
+- Requisição POST para `/tasks` com os dados do formulário;
+    
+- Fechamento automático e limpeza do formulário após criação;
+    
+- Integração com `localStorage` para salvar a última categoria usada.
+    
+
+<!-- imagem: modal-criacao-tarefa.png -->
+
+## 3.7.3 Modal de Confirmação de Exclusão
+
+<div align="center" width="100%">
+  <sub></sub>
+    <img src="../documentos/assets/Captura de tela 2025-06-09 030045.png"/>
+  <sup></sup>
+</div>
+
+**Funcionalidade**: Modal simples exibido ao tentar excluir uma tarefa, solicitando confirmação do usuário.
+
+**Features Principais**:
+
+- Mensagem clara de confirmação;
+    
+- Botões “Cancelar” e “Confirmar”;
+    
+- Feedback visual ao usuário após confirmação;
+    
+- Bloqueio da tela de fundo (overlay escuro).
+    
+
+**Benefícios para o Usuário**:
+
+- Prevenção de exclusões acidentais;
+    
+- Fluxo simples e direto.
+    
+
+**Detalhes Técnicos**:
+
+- Modal implementado com manipulação direta do DOM;
+    
+- Ao confirmar, envia DELETE para `/tasks/:id`;
+    
+- Após resposta do servidor, recarrega a lista de tarefas.
+
+## 3.7.4 Área de Filtros e Contadores
+<div align="center" width="100%">
+  <sub></sub>
+    <img src="../documentos/assets/Captura de tela 2025-06-09 021507.png"/>
+  <sup></sup>
+</div>
+**Funcionalidade**: Bloco superior com filtros por status e contadores de tarefas em cada categoria.
+
+**Features Principais**:
+
+- Botões para filtrar tarefas (todas, pendentes, em andamento, concluídas);
+    
+- Contadores dinâmicos por status;
+    
+- Destaque visual do filtro ativo;
+    
+- Feedback visual em tempo real ao alterar o filtro.
+    
+
+**Benefícios para o Usuário**:
+
+- Visão geral clara da carga de trabalho;
+    
+- Navegação fluida e segmentada.
+    
+
+**Detalhes Técnicos**:
+
+- Manipulação de classes CSS para aplicar destaque;
+    
+- Atualização do DOM com base em filtros via JavaScript;
+    
+- Filtros armazenados localmente com `localStorage` para persistência.
+    
+
+<!-- imagem: area-filtros-e-contadores.png -->
+
+## 3.7.5 Modal de Edição de Tarefa
+
+**Funcionalidade**: Modal semelhante ao de criação, utilizado para atualizar os dados de uma tarefa existente.
+
+**Features Principais**:
+
+- Campos pré-preenchidos com dados da tarefa;
+    
+- Botões para salvar alterações ou cancelar;
+    
+- Validação visual e interativa;
+    
+- Atualização automática da exibição após edição.
+    
+
+**Benefícios para o Usuário**:
+
+- Alterações simples sem sair da visualização atual;
+    
+- Evita erros e duplicações.
+    
+
+**Detalhes Técnicos**:
+
+- Modal com dados preenchidos via API (`GET /tasks/:id`);
+    
+- Atualização via PUT para o endpoint correspondente;
+    
+- Atualização local da DOM para evitar recarregamento da página.
+    
+
+<!-- imagem: modal-edicao-tarefa.png -->
+
+## 3.7.6 Estrutura Técnica do Frontend
+
+**Tecnologias Utilizadas**:
+
+- HTML5 sem bibliotecas externas;
+    
+- CSS3 com classes semânticas e responsividade básica;
+    
+- JavaScript ES6 para lógica de requisições, manipulação de DOM e interação com API RESTful;
+    
+- Integração com o backend Express/PostgreSQL via `fetch()`.
+    
+
+**Padrões Implementados**:
+
+- Separação de responsabilidades por arquivos: `index.html`, `style.css`, `script.js`;
+    
+- Componentização sem frameworks, baseada em templates dinâmicos;
+    
+- Feedback visual com classes condicionais e animações CSS;
+    
+- Controle de estado mínimo com objetos JS e `localStorage`.
 
 ## <a name="c4"></a>4. Desenvolvimento da Aplicação Web (Semana 8)
 
