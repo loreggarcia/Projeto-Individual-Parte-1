@@ -32,11 +32,11 @@ CREATE TABLE tasks (
     FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria)
 );
 
--- Inserir categorias padrão
-INSERT INTO categorias (nome_categoria) VALUES 
-('trabalho'),
-('pessoal'),
-('estudos'),
-('saude'),
-('outros')
-ON CONFLICT DO NOTHING;
+-- Inserir categorias padrão com id_categoria explícito
+INSERT INTO categorias (id_categoria, nome_categoria) VALUES
+(1, 'trabalho'),
+(2, 'pessoal'),
+(3, 'estudos'),
+(4, 'saude'),
+(5, 'outros')
+ON CONFLICT (id_categoria) DO NOTHING;

@@ -19,6 +19,7 @@
                 <!-- Formulário de Tarefas -->
                 <div class="task-form">
                     <h3 id="form-title">Nova Tarefa</h3>
+                    <div id="error-container"></div>
                     <form id="task-form">
                         <div class="form-group">
                             <label for="task-title">Título da Tarefa</label>
@@ -121,10 +122,8 @@
                 </div>
                 
                 <div class="tasks-grid" id="tasks-container">
-                    <div class="empty-state">
-                        <div style="font-size: 4rem; margin-bottom: 20px;">📝</div>
-                        <h3>Nenhuma tarefa encontrada</h3>
-                        <p>Crie sua primeira tarefa para começar a organizar seu dia!</p>
+                    <div class="loading">
+                        <div>Carregando tarefas...</div>
                     </div>
                 </div>
             </div>
@@ -148,7 +147,7 @@
         // Estado da aplicação
         let tasks = [];
         let editingTaskId = null;
-        let taskIdCounter = 1;
+        let isLoading = false;
 
         // Elementos do DOM
         const taskForm = document.getElementById('task-form');
@@ -157,8 +156,9 @@
         const submitBtn = document.getElementById('submit-btn');
         const cancelBtn = document.getElementById('cancel-btn');
         const confirmModal = document.getElementById('confirm-modal');
+        const errorContainer = document.getElementById('error-container');
 
-        // URL base da API
+        // URL base da API - ajuste conforme necessário
         const API_URL = 'http://localhost:3000/api/tasks';
 
         // Event Listeners
@@ -176,64 +176,149 @@
             }
         });
 
+        // Função para mostrar erros
+        function showError(message) {
+            const container = document.getElementById('error-container');
+            if (container) {
+                container.innerHTML = `<div class="error-message">${message}</div>`;
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 5000);
+            } else {
+                console.error('❌ Erro:', message);
+                alert(message); // Fallback se o container não existir
+            }
+        }
+
+        // Função para mostrar loading
+        function setLoading(loading) {
+            isLoading = loading;
+            if (loading) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = editingTaskId ? 'Atualizando...' : 'Criando...';
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.textContent = editingTaskId ? 'Atualizar Tarefa' : 'Criar Tarefa';
+            }
+        }
+
         // Funções principais
         async function handleSubmit(e) {
             e.preventDefault();
             
+            if (isLoading) return;
+            
+            setLoading(true);
+            
+            // Limpar erros anteriores
+            const container = document.getElementById('error-container');
+            if (container) {
+                container.innerHTML = '';
+            }
+            
+            // Mapeamento dos campos para o backend
+            const categoriaNome = document.getElementById('task-category').value;
+            const id_categoria = getCategoriaIdByName(categoriaNome);
+            const prioridade = document.getElementById('task-priority').value;
+            const data_evento = document.getElementById('task-date').value;
+            const descricao = document.getElementById('task-description').value.trim();
+            const titulo = document.getElementById('task-title').value.trim();
+            const id_usuario = 1; // fixo
             const taskData = {
-                title: document.getElementById('task-title').value,
-                description: document.getElementById('task-description').value,
-                category: document.getElementById('task-category').value,
-                priority: document.getElementById('task-priority').value,
-                date: document.getElementById('task-date').value,
-                completed: false,
-                createdAt: new Date().toISOString()
+                titulo,
+                descricao,
+                id_categoria,
+                prioridade,
+                data_evento,
+                concluida: false,
+                id_usuario
             };
 
-            if (editingTaskId) {
-                await updateTask(editingTaskId, taskData);
-            } else {
-                await createTask(taskData);
-            }
+            try {
+                if (editingTaskId) {
+                    await updateTask(editingTaskId, taskData);
+                } else {
+                    await createTask(taskData);
+                }
 
-            resetForm();
-            await loadTasks();
-            updateStats();
+                resetForm();
+                await loadTasks();
+                updateStats();
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
         }
 
         async function createTask(taskData) {
             try {
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(taskData)
                 });
-            } catch (err) {
-                alert('Erro ao criar tarefa!');
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Tarefa criada:', result);
+            } catch (error) {
+                console.error('❌ Erro ao criar tarefa:', error);
+                throw new Error('Não foi possível criar a tarefa. Verifique se o servidor está rodando.');
             }
         }
 
         async function updateTask(id, taskData) {
             try {
-                await fetch(`${API_URL}/${id}`, {
+                const response = await fetch(`${API_URL}/${id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(taskData)
                 });
-            } catch (err) {
-                alert('Erro ao atualizar tarefa!');
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Tarefa atualizada:', result);
+            } catch (error) {
+                console.error('❌ Erro ao atualizar tarefa:', error);
+                throw new Error('Não foi possível atualizar a tarefa. Verifique se o servidor está rodando.');
             }
         }
 
         async function deleteTask(id) {
             try {
-                await fetch(`${API_URL}/${id}`, {
-                    method: 'DELETE'
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+                }
+
+                console.log('✅ Tarefa excluída');
                 await loadTasks();
                 updateStats();
-            } catch (err) {
-                alert('Erro ao excluir tarefa!');
+            } catch (error) {
+                console.error('❌ Erro ao excluir tarefa:', error);
+                showError('Não foi possível excluir a tarefa. Verifique se o servidor está rodando.');
             }
         }
 
@@ -241,15 +326,27 @@
             const task = tasks.find(task => task.id === id);
             if (task) {
                 try {
-                    await fetch(`${API_URL}/${id}`, {
+                    const updatedTask = { ...task, completed: !task.completed };
+                    const response = await fetch(`${API_URL}/${id}`, {
                         method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ...task, completed: !task.completed })
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(updatedTask)
                     });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
+                    }
+
                     await loadTasks();
                     updateStats();
-                } catch (err) {
-                    alert('Erro ao atualizar status da tarefa!');
+                    console.log('✅ Status da tarefa atualizado');
+                } catch (error) {
+                    console.error('❌ Erro ao atualizar status da tarefa:', error);
+                    showError('Não foi possível atualizar o status da tarefa.');
                 }
             }
         }
@@ -259,11 +356,11 @@
             if (task) {
                 editingTaskId = id;
                 
-                document.getElementById('task-title').value = task.title;
-                document.getElementById('task-description').value = task.description;
-                document.getElementById('task-category').value = task.category;
-                document.getElementById('task-priority').value = task.priority;
-                document.getElementById('task-date').value = task.date;
+                document.getElementById('task-title').value = task.title || '';
+                document.getElementById('task-description').value = task.description || '';
+                document.getElementById('task-category').value = task.category || '';
+                document.getElementById('task-priority').value = task.priority || '';
+                document.getElementById('task-date').value = task.date || '';
                 
                 formTitle.textContent = 'Editar Tarefa';
                 submitBtn.textContent = 'Atualizar Tarefa';
@@ -285,24 +382,48 @@
             submitBtn.textContent = 'Criar Tarefa';
             cancelBtn.style.display = 'none';
             editingTaskId = null;
+            
+            // Limpar erros
+            const container = document.getElementById('error-container');
+            if (container) {
+                container.innerHTML = '';
+            }
         }
 
         async function loadTasks() {
             try {
-                const res = await fetch(API_URL);
-                tasks = await res.json();
+                console.log('🔄 Carregando tarefas...');
+                const response = await fetch(API_URL, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                tasks = Array.isArray(data) ? data : [];
+                console.log('✅ Tarefas carregadas:', tasks.length);
+                
                 renderTasks();
                 updateStats();
-            } catch (err) {
+            } catch (error) {
+                console.error('❌ Erro ao carregar tarefas:', error);
                 tasks = [];
                 renderTasks();
                 updateStats();
+                
+                // Só mostra erro se não for erro de conexão inicial
+                if (tasks.length === 0) {
+                    showError('Não foi possível carregar as tarefas. Verifique se o servidor está rodando na porta 3000.');
+                }
             }
         }
 
         function renderTasks() {
             const filteredTasks = getFilteredTasks();
-            
             if (filteredTasks.length === 0) {
                 tasksContainer.innerHTML = `
                     <div class="empty-state">
@@ -313,37 +434,46 @@
                 `;
                 return;
             }
-
-            tasksContainer.innerHTML = filteredTasks.map(task => `
-                <div class="task-item ${task.completed ? 'completed' : ''} priority-${task.priority}">
+            tasksContainer.innerHTML = filteredTasks.map(task => {
+                // Corrigir nomes vindos do backend para o frontend
+                const title = task.titulo || task.title || '';
+                const description = task.descricao || task.description || '';
+                const categoryId = task.id_categoria || task.category || '';
+                const priority = task.prioridade || task.priority || '';
+                const date = task.data_evento || task.date || '';
+                const completed = task.concluida !== undefined ? task.concluida : task.completed;
+                // Mapear id_categoria para nome
+                const categoryMap = {1:'trabalho',2:'pessoal',3:'estudos',4:'saude',5:'outros'};
+                const category = categoryMap[categoryId] || categoryId || '';
+                return `
+                <div class="task-item ${completed ? 'completed' : ''} priority-${priority}">
                     <div class="checkbox-container">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''} 
-                               onchange="toggleTaskComplete(${task.id})">
-                        <span class="task-category category-${task.category}">${task.category}</span>
+                        <input type="checkbox" ${completed ? 'checked' : ''} 
+                               onchange="toggleTaskComplete(${task.id_task || task.id})">
+                        <span class="task-category category-${category}">${category}</span>
                     </div>
-                    
                     <div class="task-header">
                         <div>
-                            <div class="task-title">${task.title}</div>
-                            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                            <div class="task-title">${escapeHtml(title)}</div>
+                            ${description ? `<div class="task-description">${escapeHtml(description)}</div>` : ''}
                         </div>
                     </div>
-                    
                     <div class="task-meta">
                         <div class="task-date">
-                            📅 ${task.date ? formatDate(task.date) : 'Sem data'}
+                            📅 ${date ? formatDate(date) : 'Sem data'}
                         </div>
                         <div class="task-actions">
-                            <button class="btn btn-secondary btn-small" onclick="editTask(${task.id})">
+                            <button class="btn btn-secondary btn-small" onclick="editTask(${task.id_task || task.id})">
                                 Editar
                             </button>
-                            <button class="btn btn-danger btn-small" onclick="confirmDelete(${task.id})">
+                            <button class="btn btn-danger btn-small" onclick="confirmDelete(${task.id_task || task.id})">
                                 Excluir
                             </button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function getFilteredTasks() {
@@ -385,8 +515,24 @@
         }
 
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR');
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            } catch (error) {
+                return 'Data inválida';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
 
         function confirmDelete(id) {
@@ -401,9 +547,49 @@
             confirmModal.style.display = 'none';
         }
 
+        // Verificar se o servidor está rodando
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('http://localhost:3000/health');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Servidor conectado:', data);
+                    return true;
+                }
+            } catch (error) {
+                console.warn('⚠️ Servidor não encontrado. Certifique-se de que está rodando na porta 3000');
+                return false;
+            }
+        }
+
         // Inicializar aplicação
-        function init() {
-            loadTasks();
+        async function init() {
+            console.log('🚀 Inicializando MyPlanner...');
+            // Verificar conexão com servidor
+            const serverOnline = await checkServerHealth();
+            if (!serverOnline) {
+                tasksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">⚠️</div>
+                        <h3>Servidor não encontrado</h3>
+                        <p>Certifique-se de que o servidor está rodando na porta 3000</p>
+                        <button class="btn" onclick="init()" style="margin-top: 15px;">Tentar novamente</button>
+                    </div>
+                `;
+                return;
+            }
+            await loadTasks();
+        }
+
+        // Utilitário para mapear categoria para id_categoria
+        function getCategoriaIdByName(nome) {
+            switch (nome) {
+                case 'trabalho': return 1;
+                case 'pessoal': return 2;
+                case 'estudos': return 3;
+                case 'saude': return 4;
+                default: return null;
+            }
         }
 
         // Inicializar quando a página carregar
