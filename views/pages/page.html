@@ -143,11 +143,62 @@
         </div>
     </div>
 
+    <!-- Modal de Edição -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h3>Editar Tarefa</h3>
+            <form id="edit-task-form">
+                <div class="form-group">
+                    <label for="edit-task-title">Título da Tarefa</label>
+                    <input type="text" id="edit-task-title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-description">Descrição</label>
+                    <textarea id="edit-task-description" placeholder="Descreva sua tarefa..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-category">Categoria</label>
+                    <select id="edit-task-category" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="trabalho">Trabalho</option>
+                        <option value="pessoal">Pessoal</option>
+                        <option value="estudos">Estudos</option>
+                        <option value="saude">Saúde</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-priority">Prioridade</label>
+                    <select id="edit-task-priority" required>
+                        <option value="">Selecione a prioridade</option>
+                        <option value="alta">Alta</option>
+                        <option value="media">Média</option>
+                        <option value="baixa">Baixa</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-task-date">Data de Vencimento</label>
+                    <input type="date" id="edit-task-date">
+                </div>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn" id="edit-submit-btn">Atualizar Tarefa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Estado da aplicação
         let tasks = [];
         let editingTaskId = null;
         let isLoading = false;
+        let currentEditingTaskId = null;
 
         // Elementos do DOM
         const taskForm = document.getElementById('task-form');
@@ -157,6 +208,8 @@
         const cancelBtn = document.getElementById('cancel-btn');
         const confirmModal = document.getElementById('confirm-modal');
         const errorContainer = document.getElementById('error-container');
+        const editModal = document.getElementById('edit-modal');
+        const editTaskForm = document.getElementById('edit-task-form');
 
         // URL base da API - ajuste conforme necessário
         const API_URL = 'http://localhost:3000/api/tasks';
@@ -168,11 +221,15 @@
         document.getElementById('filter-priority').addEventListener('change', applyFilters);
         document.getElementById('cancel-btn').addEventListener('click', cancelEdit);
         document.querySelector('.close').addEventListener('click', closeModal);
+        editTaskForm.addEventListener('submit', handleEditSubmit);
         
         // Fechar modal ao clicar fora
         window.addEventListener('click', (e) => {
             if (e.target === confirmModal) {
                 closeModal();
+            }
+            if (e.target === editModal) {
+                closeEditModal();
             }
         });
 
@@ -251,6 +308,47 @@
             }
         }
 
+        async function handleEditSubmit(e) {
+            e.preventDefault();
+            
+            if (!currentEditingTaskId) return;
+            
+            const editSubmitBtn = document.getElementById('edit-submit-btn');
+            editSubmitBtn.disabled = true;
+            editSubmitBtn.textContent = 'Atualizando...';
+            
+            // Mapeamento dos campos para o backend
+            const categoriaNome = document.getElementById('edit-task-category').value;
+            const id_categoria = getCategoriaIdByName(categoriaNome);
+            const prioridade = document.getElementById('edit-task-priority').value;
+            const data_evento = document.getElementById('edit-task-date').value;
+            const descricao = document.getElementById('edit-task-description').value.trim();
+            const titulo = document.getElementById('edit-task-title').value.trim();
+            const id_usuario = 1; // fixo
+            
+            const taskData = {
+                titulo,
+                descricao,
+                id_categoria,
+                prioridade,
+                data_evento,
+                concluida: false,
+                id_usuario
+            };
+
+            try {
+                await updateTask(currentEditingTaskId, taskData);
+                closeEditModal();
+                await loadTasks();
+                updateStats();
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                editSubmitBtn.disabled = false;
+                editSubmitBtn.textContent = 'Atualizar Tarefa';
+            }
+        }
+
         async function createTask(taskData) {
             try {
                 const response = await fetch(API_URL, {
@@ -324,53 +422,65 @@
             }
         }
 
+        // Função para alternar status de conclusão da tarefa
         async function toggleTaskComplete(id) {
-            const task = tasks.find(task => task.id === id);
-            if (task) {
-                try {
-                    const updatedTask = { ...task, completed: !task.completed };
-                    const response = await fetch(`${API_URL}/${id}`, {
-                        method: 'PUT',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify(updatedTask)
-                    });
+            const taskId = typeof id === 'object' && id.id_task ? id.id_task : id;
+            const task = tasks.find(t => (t.id_task || t.id) == taskId);
+            
+            if (!task) return;
+            
+            // Inverter o status atual
+            const currentStatus = task.concluida !== undefined ? task.concluida : task.completed;
+            const newStatus = !currentStatus;
+            
+            // Mapeamento dos campos para o backend
+            const categoriaNome = getCategoriaNameById(task.id_categoria);
+            const taskData = {
+                titulo: task.titulo || task.title || '',
+                descricao: task.descricao || task.description || '',
+                id_categoria: task.id_categoria,
+                prioridade: task.prioridade || task.priority || '',
+                data_evento: task.data_evento || task.date || '',
+                concluida: newStatus,
+                id_usuario: task.id_usuario || 1
+            };
 
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.message || `Erro HTTP: ${response.status}`);
-                    }
-
-                    await loadTasks();
-                    updateStats();
-                    console.log('✅ Status da tarefa atualizado');
-                } catch (error) {
-                    console.error('❌ Erro ao atualizar status da tarefa:', error);
-                    showError('Não foi possível atualizar o status da tarefa.');
-                }
+            try {
+                await updateTask(taskId, taskData);
+                await loadTasks();
+                updateStats();
+            } catch (error) {
+                console.error('❌ Erro ao alterar status da tarefa:', error);
+                showError('Não foi possível alterar o status da tarefa.');
             }
         }
 
-        function editTask(id) {
-            const task = tasks.find(task => task.id === id);
+        async function editTask(id) {
+            const taskId = typeof id === 'object' && id.id_task ? id.id_task : id;
+            const task = tasks.find(t => (t.id_task || t.id) == taskId);
+            
             if (task) {
-                editingTaskId = id;
+                currentEditingTaskId = taskId;
                 
-                document.getElementById('task-title').value = task.title || '';
-                document.getElementById('task-description').value = task.description || '';
-                document.getElementById('task-category').value = task.category || '';
-                document.getElementById('task-priority').value = task.priority || '';
-                document.getElementById('task-date').value = task.date || '';
+                // Preencher o modal com os dados da tarefa
+                document.getElementById('edit-task-title').value = task.titulo || task.title || '';
+                document.getElementById('edit-task-description').value = task.descricao || task.description || '';
                 
-                formTitle.textContent = 'Editar Tarefa';
-                submitBtn.textContent = 'Atualizar Tarefa';
-                cancelBtn.style.display = 'inline-block';
+                // Mapear id_categoria para nome
+                const categoryName = getCategoriaNameById(task.id_categoria) || task.category || '';
+                document.getElementById('edit-task-category').value = categoryName;
                 
-                // Scroll para o formulário
-                document.querySelector('.task-form').scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('edit-task-priority').value = task.prioridade || task.priority || '';
+                document.getElementById('edit-task-date').value = task.data_evento || task.date || '';
+                
+                // Mostrar o modal
+                editModal.style.display = 'block';
             }
+        }
+
+        function closeEditModal() {
+            editModal.style.display = 'none';
+            currentEditingTaskId = null;
         }
 
         function cancelEdit() {
@@ -445,8 +555,7 @@
                 const date = task.data_evento || task.date || '';
                 const completed = task.concluida !== undefined ? task.concluida : task.completed;
                 // Mapear id_categoria para nome
-                const categoryMap = {1:'trabalho',2:'pessoal',3:'estudos',4:'saude',5:'outros'};
-                const category = categoryMap[categoryId] || categoryId || '';
+                const category = getCategoriaNameById(categoryId) || categoryId || '';
                 return `
                 <div class="task-item ${completed ? 'completed' : ''} priority-${priority}">
                     <div class="checkbox-container">
@@ -484,12 +593,18 @@
             const priorityFilter = document.getElementById('filter-priority').value;
 
             return tasks.filter(task => {
+                // Normalizar dados da tarefa
+                const taskCompleted = task.concluida !== undefined ? task.concluida : task.completed;
+                const taskCategory = getCategoriaNameById(task.id_categoria) || task.category || '';
+                const taskPriority = task.prioridade || task.priority || '';
+
+                // Verificar filtros
                 const statusMatch = !statusFilter || 
-                    (statusFilter === 'concluida' && task.completed) ||
-                    (statusFilter === 'pendente' && !task.completed);
+                    (statusFilter === 'concluida' && taskCompleted) ||
+                    (statusFilter === 'pendente' && !taskCompleted);
                 
-                const categoryMatch = !categoryFilter || task.category === categoryFilter;
-                const priorityMatch = !priorityFilter || task.priority === priorityFilter;
+                const categoryMatch = !categoryFilter || taskCategory === categoryFilter;
+                const priorityMatch = !priorityFilter || taskPriority === priorityFilter;
 
                 return statusMatch && categoryMatch && priorityMatch;
             });
@@ -508,7 +623,10 @@
 
         function updateStats() {
             const totalTasks = tasks.length;
-            const completedTasks = tasks.filter(task => task.completed).length;
+            const completedTasks = tasks.filter(task => {
+                const completed = task.concluida !== undefined ? task.concluida : task.completed;
+                return completed;
+            }).length;
             const pendingTasks = totalTasks - completedTasks;
 
             document.getElementById('total-tasks').textContent = totalTasks;
@@ -591,6 +709,18 @@
                 case 'estudos': return 3;
                 case 'saude': return 4;
                 default: return null;
+            }
+        }
+
+        // Utilitário para mapear id_categoria para nome
+        function getCategoriaNameById(id) {
+            switch (id) {
+                case 1: return 'trabalho';
+                case 2: return 'pessoal';
+                case 3: return 'estudos';
+                case 4: return 'saude';
+                case 5: return 'outros';
+                default: return '';
             }
         }
 

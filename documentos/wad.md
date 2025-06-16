@@ -18,25 +18,12 @@ Este projeto é uma aplicação web para gerenciamento de tarefas desenvolvido u
 
 A aplicação permite funcionalidades tais quais como criar, editar e deletar tarefas, definir o status de prioridade por categorias, marcar tarefas como concluídas e filtrá-las por status ou data. 
 
----
 
-## <a name="c2"></a>2. Visão Geral da Aplicação Web
-
-### 2.1. Personas (Semana 01 - opcional)
-
-*Posicione aqui sua(s) Persona(s) em forma de texto markdown com imagens, ou como imagem de template preenchido. Atualize esta seção ao longo do módulo se necessário.*
-
-### 2.2. User Stories (Semana 01 - opcional)
-
-*Posicione aqui a lista de User Stories levantadas para o projeto. Siga o template de User Stories e utilize a referência USXX para numeração (US01, US02, US03, ...). Indique todas as User Stories mapeadas, mesmo aquelas que não forem implementadas ao longo do projeto. Não se esqueça de explicar o INVEST de 1 User Storie prioritária.*
-
----
-
-## <a name="c3"></a>3. Projeto da Aplicação Web
+## <a name="c3"></a>2. Projeto da Aplicação Web
 
 A arquitetura do sistema MyPlanner segue o padrão MVC (Model-View-Controller), permitindo uma separação clara de responsabilidades e facilitando a manutenção e escalabilidade da aplicação.
 
-### 3.1. Modelagem do banco de dados
+### 2.1. Modelagem do banco de dados
 
 A modelagem do banco de dados é o processo de criar uma representação estruturada das informações que serão armazenadas em um sistema de banco de dados. Este processo envolve a identificação das entidades principais, seus atributos e os relacionamentos entre elas, resultando em um esquema que serve como plano para a implementação física do banco de dados.
 
@@ -72,7 +59,7 @@ O diagrama abaixo apresenta a estrutura completa do banco de dados com todas as 
 - Cada tarefa está associada a um único usuário;
 - As categorias podem ser usadas por vários usuários, mas cada tarefa só pertence a uma categoria por vez
 
-### 3.1.1 BD e Models 
+### 2.1.1 BD e Models 
 A camada de Models em uma aplicação baseada na arquitetura MVC (Model-View-Controller) é responsável por lidar com a lógica de acesso a dados, abstraindo a interação direta com o banco de dados. No sistema de Gerenciamento de Tarefas, os Models servem como ponte entre os controladores e o banco de dados PostgreSQL, permitindo a manipulação segura, reutilizável e estruturada das informações.
 
 Os Models garantem o encapsulamento das regras de negócio e facilitam a manutenção do sistema, isolando mudanças na base de dados e promovendo uma interface de acesso consistente para as demais camadas da aplicação.
@@ -102,7 +89,7 @@ Responsável por lidar com os dados da tabela `usuarios`, englobando funcionalid
 - **Vínculo com tarefas:** cada usuário pode ser associado a diversas tarefas via chave estrangeira.
 
 
-### 3.2. Arquitetura (Semana 5)
+### 2.2. Arquitetura 
 
 A arquitetura de software é o projeto de um sistema de software, que define normas, técnicas e o modo de interação entre os componentes do software. Ela estabelece a base para o desenvolvimento, a evolução e a manutenção do software. As arquiteturas possuem diversos padrões, que devem ser escolhidos de acordo com o modelo de negócio e os requisitos. Ou seja, a arquitetura de um software é a organização de um sistema, sendo responsável por definir tudo o que será utilizado dentro do projeto  
     
@@ -112,7 +99,7 @@ Abaixo está o o digrama de arquitetura desse projeto:
 
 ![!\[\[image.png\]\]](assets/image.png)
 
-### 3.2.1.Fluxo da Arquitetura
+### 2.2.1.Fluxo da Arquitetura
 
 1. **Cliente (Usuário e Navegador)**: O usuário interage com a aplicação por meio de uma interface no navegador. Essa interface envia requisições HTTP, como por exemplo o envio de formulários ou requisições de visualização de dados.
 2. **View (frontRoutes.js)**: O arquivo `frontRoutes.js` é o ponto de entrada das requisições do navegador. Ele atua como intermediário, redirecionando o usuário para as rotas apropriadas de cada funcionalidade: tarefas, usuários ou categorias.
@@ -121,20 +108,6 @@ Abaixo está o o digrama de arquitetura desse projeto:
 5. **Models (CategoriaModel.js, TasksModel.js, UsuarioModel.js)**: Os modelos representam a camada de dados da aplicação. Cada modelo é responsável por interagir com o banco de dados PostgreSQL, realizando operações como criação, leitura, atualização e exclusão (CRUD). Eles definem a estrutura das tabelas e encapsulam as consultas SQL.
 6. **Banco de Dados (PostgreSQL)**: Todos os dados persistentes da aplicação são armazenados em um banco de dados PostgreSQL. Os modelos fazem consultas diretamente a esse banco, e os resultados são retornados aos controladores, que por sua vez os enviam para as rotas, até que cheguem de volta ao cliente como resposta da requisição.
 
-
-
-### 3.3. Wireframes (Semana 03 - opcional)
-
-*Posicione aqui as imagens do wireframe construído para sua solução e, opcionalmente, o link para acesso (mantenha o link sempre público para visualização).*
-
-### 3.4. Guia de estilos (Semana 05 - opcional)
-
-*Descreva aqui orientações gerais para o leitor sobre como utilizar os componentes do guia de estilos de sua solução.*
-
-
-### 3.5. Protótipo de alta fidelidade (Semana 05 - opcional)
-
-*Posicione aqui algumas imagens demonstrativas de seu protótipo de alta fidelidade e o link para acesso ao protótipo completo (mantenha o link sempre público para visualização).*
 
 ### 3.6. WebAPI e Endpoints
 
@@ -421,18 +394,10 @@ O frontend do sistema de gerenciamento de tarefas foi desenvolvido utilizando HT
 
 ### 4.1 Demonstração do Sistema Web (Semana 8)
 
-*VIDEO: Insira o link do vídeo demonstrativo nesta seção*
-*Descreva e ilustre aqui o desenvolvimento do sistema web completo, explicando brevemente o que foi entregue em termos de código e sistema. Utilize prints de tela para ilustrar.*
+O desenvolvimento do MyPlanner foi centrado em entregar uma ferramenta funcional, leve e com alta usabilidade, voltada para pessoas que precisam organizar melhor sua rotina. Com a implementação de um sistema de categorias, filtros e status personalizáveis, o sistema entrega uma experiência simples e poderosa para acompanhar o dia a dia. 
 
 ### 4.2 Conclusões e Trabalhos Futuros (Semana 8)
 
-*Indique pontos fortes e pontos a melhorar de maneira geral.*
-*Relacione também quaisquer outras ideias que você tenha para melhorias futuras.*
+Acredito que ainda tenho que melhorar a plataforma para ser algo mais completo para usuário adicionando funcionalidades que de fato sejam diferenciais como um sistema de alerta ou uma gamificação para manter o usuário na página, bem como um sistema de login para deixar a experiencia do usuário mais personalizada.
 
-
-
-## <a name="c5"></a>5. Referências
-
-_Incluir as principais referências de seu projeto, para que o leitor possa consultar caso ele se interessar em aprofundar._<br>
-
----
+Por fim, gostaria de agradecer as pessoas que me ajudaram no desenvolvimento desse projeto principalmente aos meus colegas veteranos e ao docente da disciplina de progamação [Bryan Kano](https://www.linkedin.com/in/bryan-kano/), que me auxiliaram na conclusão desse trabalho mesmo auxiliando a descobrir um mundo novo fora da caverna escura da ignorância dentro da progamação.
